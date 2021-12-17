@@ -1,0 +1,87 @@
+{{- if and .Values.listmonk.enabled .Values.listmonk.database.create }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: listmonk-db
+  labels:
+    app: listmonk-db
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-4"
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: listmonk-db
+  serviceName: listmonk-db
+  template:
+    metadata:
+      labels:
+        app: listmonk-db
+    spec:
+      containers:
+      - name: listmonk-db
+        image: "{{ .Values.listmonk.database.image.repository }}:{{ .Values.listmonk.database.image.tag }}"
+        imagePullPolicy: {{ .Values.listmonk.database.image.pullPolicy }}
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: listmonk-env-vars
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: listmonk-env-vars
+              key: DB_PASSWORD
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 2
+          successThreshold: 1
+          tcpSocket:
+            port: 5432
+          timeoutSeconds: 2
+        ports:
+        - containerPort: 5432
+          name: 5432tcp
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 2
+          successThreshold: 2
+          tcpSocket:
+            port: 5432
+          timeoutSeconds: 2
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: listmonk
+          subPath: listmonk
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: listmonk
+        persistentVolumeClaim:
+          claimName: listmonk-db
+  updateStrategy:
+    type: RollingUpdate
+status:
+  replicas: 0
+{{- end }}

@@ -1,0 +1,20 @@
+{{- if .Values.listmonk.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: listmonk-app
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app: listmonk-app
+  sessionAffinity: None
+  type: ClusterIP
+{{- end }}

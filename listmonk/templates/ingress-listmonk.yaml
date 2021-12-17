@@ -1,0 +1,19 @@
+﻿{{- if and .Values.listmonk.enabled .Values.listmonk.ingress.enabled }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: listmonk
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+spec:
+  rules:
+  - host: {{ .Values.listmonk.ingress.host }}
+    http:
+      paths:
+      - backend:
+          serviceName: listmonk-app
+          servicePort: http
+        pathType: ImplementationSpecific
+{{- end }}

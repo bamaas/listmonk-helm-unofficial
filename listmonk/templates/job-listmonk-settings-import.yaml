@@ -1,0 +1,39 @@
+{{- if and .Values.listmonk.enabled .Values.listmonk.settings.import }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: listmonk-settings-import
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+  annotations:
+    "helm.sh/hook": "post-install, post-upgrade"
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  backoffLimit: 15
+  ttlSecondsAfterFinished: 60
+  activeDeadlineSeconds: 100
+  template:
+    metadata:
+      labels:
+        job: "listmonk-settings-import"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: listmonk-settings-import
+        image: "{{ .Values.listmonk.settings.image.repository }}:{{ .Values.listmonk.settings.image.tag }}"
+        command: 
+          - "/usr/local/bin/python"
+          - "/usr/src/import.py"
+        imagePullPolicy: {{ .Values.listmonk.settings.image.pullPolicy }}
+        volumeMounts:
+          - mountPath: "/mnt/"
+            name: config
+            readOnly: true
+      volumes:
+        - name: config
+          secret:
+            secretName: listmonk-settings
+{{ end }}

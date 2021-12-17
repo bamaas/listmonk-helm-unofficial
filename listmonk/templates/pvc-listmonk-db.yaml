@@ -1,0 +1,26 @@
+{{- if .Values.listmonk.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-weight": "-5"
+  name: listmonk-db
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.listmonk.database.persistentVolume.capacity }}
+  storageClassName: {{ .Values.listmonk.database.persistentVolume.storageClassName }}
+  volumeMode: Filesystem
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: {{ .Values.listmonk.database.persistentVolume.capacity }}
+{{- end }}

@@ -1,0 +1,75 @@
+{{- if and .Values.listmonk.enabled .Values.listmonk.database.init }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: listmonk-db-init
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  backoffLimit: 15
+  ttlSecondsAfterFinished: 60
+  activeDeadlineSeconds: 100
+  template:
+    metadata:
+      labels:
+        job: "listmonk-db-init"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: listmonk-db-init
+        image: "{{ .Values.listmonk.image.repository }}:{{ .Values.listmonk.image.tag }}"
+        command: [sh, -c, "yes | ./listmonk --install"]
+        imagePullPolicy: {{ .Values.listmonk.image.pullPolicy }}
+        env:
+          - name: LISTMONK_app__address
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADDRESS
+          - name: LISTMONK_app__admin_password
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADMIN_PASSWORD
+          - name: LISTMONK_app__admin_username
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADMIN_USERNAME
+          - name: LISTMONK_db__database
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_DATABASE
+          - name: LISTMONK_db__db
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_DB
+          - name: LISTMONK_db__host
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_HOST
+          - name: LISTMONK_db__password
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_PASSWORD
+          - name: LISTMONK_db__ssl_mode
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_SSL_MODE
+          - name: LISTMONK_db__user
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_USER
+{{ end }}

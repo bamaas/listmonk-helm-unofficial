@@ -1,0 +1,103 @@
+{{- if .Values.listmonk.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listmonk-app
+  labels:
+    app: listmonk-app
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    release: "{{ .Release.Name }}"
+    revision: "{{ .Release.Revision }}"
+spec:
+  selector:
+    matchLabels:
+      app: listmonk-app
+  progressDeadlineSeconds: 600
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: listmonk-app
+    spec:
+      containers:
+      - name: listmonk-app
+        image: "{{ .Values.listmonk.image.repository }}:{{ .Values.listmonk.image.tag }}"
+        imagePullPolicy: {{ .Values.listmonk.image.pullPolicy }}
+        args:
+          - sh
+          - -c
+          - "./listmonk"
+        env:
+          - name: LISTMONK_app__address
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADDRESS
+          - name: LISTMONK_app__admin_password
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADMIN_PASSWORD
+          - name: LISTMONK_app__admin_username
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: APP_ADMIN_USERNAME
+          - name: LISTMONK_db__database
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_DATABASE
+          - name: LISTMONK_db__db
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_DB
+          - name: LISTMONK_db__host
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_HOST
+          - name: LISTMONK_db__password
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_PASSWORD
+          - name: LISTMONK_db__ssl_mode
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_SSL_MODE
+          - name: LISTMONK_db__user
+            valueFrom:
+              secretKeyRef:
+                name: listmonk-env-vars
+                key: DB_USER
+        ports:
+          - containerPort: 9000
+            name: http
+            protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+        volumeMounts:
+        - mountPath: "/mnt/"
+          name: listmonk-logo
+          readOnly: true
+      volumes:
+      - name: listmonk-logo
+        configMap:
+          name: listmonk-logo
+      dnsPolicy: ClusterFirst
+{{- end }}

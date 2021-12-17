@@ -1,0 +1,148 @@
+# Default values for listmonk.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+
+
+
+
+
+
+
+
+# listmonk is a newsletter application 
+# which is used to store users e-mailadresses in as soon as they sign up.
+listmonk:
+  enabled: true
+  image:
+    repository: listmonk/listmonk
+    pullPolicy: IfNotPresent
+    tag: "v2.0.0"
+  ingress:
+    enabled: true
+    host: newsletter.gymtrack.nl
+  adminCredentials:
+    username: admin
+    password: admin
+  # persistent volume used for media uploads
+  persistentVolume:
+    capacity: 50Mi
+    storageClass: longhorn
+  database:
+    # if create is true a new dedicated postgres container will be deployed
+    create: true
+    # if init is true a job will be scheduled to initialize the database 
+    init: true
+    image:
+      repository: postgres
+      pullPolicy: IfNotPresent
+      tag: "12.5-alpine"
+    credentials:
+      username: listmonkdbusername
+      password: listmonkdbpassword
+    persistentVolume:
+      capacity: 256Mi
+      storageClass: longhorn
+  settings:
+    # if import is true a job will be scheduled to import smtp settings through api call on installs and upgrades
+    # use with care since this will override settings that has been made through the ui.
+    import: true
+    image:
+      repository: bamaas/listmonk_import
+      pullPolicy: IfNotPresent
+      tag: "2"
+    general:
+      logo: resources/listmonk-logo.jpg
+      # Default `from` e-mail to show on outgoing campaign e-mails. 
+      defaultFromEmail: "bas <noreply@listmonk.yoursite.com>"
+      # list of e-mail addresses to which admin notifications such as import updates, campaign completion, failure etc. should be sent.
+      adminNotificationEmails: 
+        - admin@listmonk.yoursite.com
+    smtp:
+      host: "smtpServerHost"
+      port: "465"
+      username: "ditiseentest"
+      password: "smtpServerPassword"
+      authProtocol: "plain"
+      tlsEnabled: "true"
+      skipTlsVerification: "false"
