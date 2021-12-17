@@ -36,14 +36,18 @@ listmonk:
     image:
       repository: bamaas/listmonk_import
       pullPolicy: IfNotPresent
-      tag: "2"
+      tag: "5"
     general:
-      logo: resources/listmonk-logo.jpg
+      logo: "resources/listmonk-logo.jpg"
+      enablePublicSubscriptionPage: "true"
       # Default `from` e-mail to show on outgoing campaign e-mails. 
       defaultFromEmail: "bas <noreply@listmonk.yoursite.com>"
       # list of e-mail addresses to which admin notifications such as import updates, campaign completion, failure etc. should be sent.
       adminNotificationEmails: 
         - admin@listmonk.yoursite.com
+    mediaUploads:
+      provider: "filesystem"
+      uploadPath: "/listmonk/uploads"
     smtp:
       host: "smtpServerHost"
       port: "465"
